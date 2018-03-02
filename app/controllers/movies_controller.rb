@@ -11,27 +11,44 @@ class MoviesController < ApplicationController
   end
 
   def index
-     if params[:sort] == "title"
-	    @title_class = "hilite"
+    
+    if params[:sort_title] == "title"
+ 	    session[:title_class]="hilite"
  	    @movies = Movie.order("title")
-     elsif params[:sort] == "release"
- 	    @release_class = "hilite"
- 	    @movies = Movie.order("release_date")
-     else
+ 	    session[:release_class]=""
+    elsif params[:sort_release_date] == "release"
+      session[:title_class]=""
+      session[:release_class]="hilite"
+      @movies = Movie.order("release_date")
+    else
  	    @movies = Movie.all
     end
+    
     @all_ratings = Movie.distinct.pluck(:rating)
     
-    if params[:ratings] == nil
-       @clicked_box = Hash.new()
+    if params[:ratings] != nil
+      session[:clicked_box]=params[:ratings]
+    end
+    
+    if session[:clicked_box] == nil
+       session[:clicked_box] = Hash.new()
        @all_ratings.each do |rating|
-        @clicked_box[rating]=1
+        session[:clicked_box][rating]=1
        end
-      else
-       @clicked_box=params[:ratings]
     end
      
-     @movies = @movies.where({rating: @clicked_box.keys})
+     @movies = @movies.where({rating: session[:clicked_box].keys})
+     
+    if session[:title_class]=="hilite" && params[:sort_title]==nil 
+      params[:sort_title] = "title"
+      redirect_to movies_path(params)
+    elsif session[:release_class]=="hilite" && params[:sort_release_date]==nil
+      params[:sort_release_date] = "release"
+      redirect_to movies_path(params)
+    elsif params[:ratings]==nil && session[:clicked_box]!=nil
+      params[:ratings]=session[:clicked_box]
+      redirect_to movies_path(params)
+    end
   end
 
   def new
