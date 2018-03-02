@@ -20,6 +20,18 @@ class MoviesController < ApplicationController
      else
  	    @movies = Movie.all
     end
+    @all_ratings = Movie.distinct.pluck(:rating)
+    
+    if params[:ratings] == nil
+       @clicked_box = Hash.new()
+       @all_ratings.each do |rating|
+        @clicked_box[rating]=1
+       end
+      else
+       @clicked_box=params[:ratings]
+    end
+     
+     @movies = @movies.where({rating: @clicked_box.keys})
   end
 
   def new
